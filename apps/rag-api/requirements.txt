@@ -1,0 +1,7 @@
+couchbase>=4.3
+fastapi>=0.111
+uvicorn[standard]>=0.30
+langchain-couchbase>=0.3.0
+langchain-openai>=0.3
+langchain-core>=0.3
+python-dotenv>=1.0

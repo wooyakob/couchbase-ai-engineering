@@ -1,0 +1,11 @@
+couchbase>=4.3
+agentc
+agentc-langgraph
+langgraph>=0.5
+langgraph-checkpointer-couchbase
+langchain-openai>=0.3
+langchain-core>=0.3
+langchain-mcp-adapters>=0.1   # optional: MCP tools (Ch. 12)
+openai>=1.30
+python-dotenv>=1.0
+pytest>=8.0

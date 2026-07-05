@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+.ipynb_checkpoints/
+.agent-catalog/
+.agent-activity/
+.model-cache/
+notebooks/src/agentc_demo/
+.DS_Store

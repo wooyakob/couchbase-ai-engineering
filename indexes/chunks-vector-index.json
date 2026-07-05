@@ -1,0 +1,43 @@
+{
+  "type": "fulltext-index",
+  "name": "chunks-vector-index",
+  "sourceType": "gocbcore",
+  "sourceName": "ai",
+  "planParams": {"maxPartitionsPerPIndex": 1024, "indexPartitions": 1},
+  "params": {
+    "doc_config": {"mode": "scope.collection.type_field", "type_field": "type"},
+    "mapping": {
+      "default_analyzer": "standard",
+      "default_mapping": {"dynamic": false, "enabled": false},
+      "types": {
+        "docs.chunks": {
+          "dynamic": false,
+          "enabled": true,
+          "properties": {
+            "embedding": {
+              "enabled": true,
+              "dynamic": false,
+              "fields": [{
+                "name": "embedding",
+                "type": "vector",
+                "index": true,
+                "dims": 1536,
+                "similarity": "dot_product",
+                "vector_index_optimized_for": "recall"
+              }]
+            },
+            "text": {
+              "enabled": true,
+              "dynamic": false,
+              "fields": [{"name": "text", "type": "text", "index": true,
+                          "store": true, "analyzer": "en"}]
+            },
+            "metadata": {"enabled": true, "dynamic": true}
+          }
+        }
+      }
+    },
+    "store": {"indexType": "scorch", "segmentVersion": 16}
+  },
+  "sourceParams": {}
+}

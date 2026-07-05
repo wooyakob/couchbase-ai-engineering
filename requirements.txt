@@ -1,0 +1,21 @@
+# Core (notebooks 01-06, 08)
+couchbase>=4.3
+python-dotenv>=1.0
+openai>=1.30
+langchain-core>=0.3
+langchain-openai>=0.3
+langchain-couchbase>=0.3.0
+
+# Orchestration (notebook 07, apps/support-agent) — Couchbase has no orchestration
+# framework; we use LangGraph (requires Python 3.11+ for agentc)
+langgraph>=0.5
+langgraph-checkpointer-couchbase
+agentc
+agentc-langgraph
+
+# Evaluation (notebook 08) — Couchbase has no built-in evals; we use Ragas
+ragas>=0.2
+
+# Notebooks
+jupyter
+pandas
