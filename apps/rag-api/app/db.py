@@ -1,5 +1,6 @@
 """Couchbase connection and one-time provisioning (Chapter 2)."""
 
+import threading
 from datetime import timedelta
 
 from couchbase.auth import PasswordAuthenticator
@@ -11,16 +12,20 @@ from couchbase.options import ClusterOptions, KnownConfigProfiles
 from . import config
 
 _cluster: Cluster | None = None
+_cluster_lock = threading.Lock()
 
 
 def cluster() -> Cluster:
     global _cluster
     if _cluster is None:
-        opts = ClusterOptions(PasswordAuthenticator(config.CB_USERNAME, config.CB_PASSWORD))
-        if config.CB_CONN_STRING.startswith("couchbases://"):
-            opts.apply_profile(KnownConfigProfiles.WanDevelopment)
-        _cluster = Cluster.connect(config.CB_CONN_STRING, opts)
-        _cluster.wait_until_ready(timedelta(seconds=10))
+        with _cluster_lock:  # concurrent first requests must not open duplicate connections
+            if _cluster is None:
+                opts = ClusterOptions(
+                    PasswordAuthenticator(config.CB_USERNAME, config.CB_PASSWORD))
+                if config.CB_CONN_STRING.startswith("couchbases://"):
+                    opts.apply_profile(KnownConfigProfiles.WanDevelopment)
+                _cluster = Cluster.connect(config.CB_CONN_STRING, opts)
+                _cluster.wait_until_ready(timedelta(seconds=10))
     return _cluster
 
 

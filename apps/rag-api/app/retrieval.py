@@ -33,13 +33,14 @@ def hybrid_search(question: str, k: int | None = None,
         config.CHUNKS_INDEX, req,
         SearchOptions(limit=k, fields=["text", "metadata.source", "lineage.doc_id"]),
     )
-    return [
-        {
+    hits = []
+    for row in result.rows():
+        fields = row.fields or {}  # fields can be None when nothing is stored/returned
+        hits.append({
             "id": row.id,
             "score": row.score,
-            "text": row.fields.get("text", ""),
-            "source": row.fields.get("metadata.source"),
-            "doc_id": row.fields.get("lineage.doc_id"),
-        }
-        for row in result.rows()
-    ]
+            "text": fields.get("text", ""),
+            "source": fields.get("metadata.source"),
+            "doc_id": fields.get("lineage.doc_id"),
+        })
+    return hits

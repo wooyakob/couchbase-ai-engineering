@@ -231,7 +231,8 @@ def semantic_search(query: str, k: int = 3):
             VectorQuery("embedding", embed_query(query), num_candidates=k)))
     result = docs_scope.search(INDEX_NAME, req,
                                SearchOptions(limit=k, fields=["text", "metadata.source"]))
-    return [{"id": r.id, "score": round(r.score, 4), **r.fields} for r in result.rows()]
+    return [{"id": r.id, "score": round(r.score, 4), **(r.fields or {})}
+            for r in result.rows()]
 
 
 for hit in semantic_search("how do I change my database password?"):

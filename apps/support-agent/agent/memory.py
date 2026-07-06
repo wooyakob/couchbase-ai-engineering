@@ -1,6 +1,7 @@
 """Memory subsystem (Chapter 9): session store (STM) + memory store (LTM)."""
 
 import os
+import threading
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
@@ -18,19 +19,22 @@ CB_BUCKET = os.getenv("CB_BUCKET", "ai")
 MEM_INDEX = "memories-vector-index"
 
 _cluster: Cluster | None = None
+_cluster_lock = threading.Lock()
 
 
 def cluster() -> Cluster:
     global _cluster
     if _cluster is None:
-        conn = os.getenv("CB_CONN_STRING", "couchbase://localhost")
-        opts = ClusterOptions(PasswordAuthenticator(
-            os.getenv("CB_USERNAME", "Administrator"),
-            os.getenv("CB_PASSWORD", "password")))
-        if conn.startswith("couchbases://"):
-            opts.apply_profile(KnownConfigProfiles.WanDevelopment)
-        _cluster = Cluster.connect(conn, opts)
-        _cluster.wait_until_ready(timedelta(seconds=10))
+        with _cluster_lock:  # concurrent first calls must not open duplicate connections
+            if _cluster is None:
+                conn = os.getenv("CB_CONN_STRING", "couchbase://localhost")
+                opts = ClusterOptions(PasswordAuthenticator(
+                    os.getenv("CB_USERNAME", "Administrator"),
+                    os.getenv("CB_PASSWORD", "password")))
+                if conn.startswith("couchbases://"):
+                    opts.apply_profile(KnownConfigProfiles.WanDevelopment)
+                _cluster = Cluster.connect(conn, opts)
+                _cluster.wait_until_ready(timedelta(seconds=10))
     return _cluster
 
 
@@ -38,11 +42,16 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-_ai = OpenAI()
+_ai: OpenAI | None = None
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 
 
 def embed_one(text: str) -> list[float]:
+    # lazy init: OpenAI() raises without an API key, which would crash plain imports
+    # of this module (e.g. pytest collection) before the env is configured
+    global _ai
+    if _ai is None:
+        _ai = OpenAI()
     return _ai.embeddings.create(model=EMBEDDING_MODEL, input=[text]).data[0].embedding
 
 
@@ -104,5 +113,5 @@ class MemoryStore:
                                        SearchOptions(limit=k, fields=["text", "kind"]))
         except Exception:  # index not created yet -> no memories, not a crash
             return []
-        return [{"id": r.id, "score": round(r.score, 4), **r.fields}
+        return [{"id": r.id, "score": round(r.score, 4), **(r.fields or {})}
                 for r in result.rows()]

@@ -45,7 +45,8 @@ def search_docs(question: str) -> list[dict]:
         VectorQuery("embedding", embed_one(question), num_candidates=5)))
     result = scope.search("chunks-vector-index", req,
                           SearchOptions(limit=5, fields=["text", "metadata.source"]))
-    return [{"text": r.fields["text"], "source": r.fields.get("metadata.source"),
+    return [{"text": (r.fields or {}).get("text", ""),
+             "source": (r.fields or {}).get("metadata.source"),
              "score": r.score} for r in result.rows()]
 
 

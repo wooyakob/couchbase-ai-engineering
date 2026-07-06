@@ -195,7 +195,8 @@ class MemoryStore:
         )))
         result = self.scope.search(self.index, req,
                                    SearchOptions(limit=k, fields=["text", "kind"]))
-        hits = [{"id": r.id, "score": round(r.score, 4), **r.fields} for r in result.rows()]
+        hits = [{"id": r.id, "score": round(r.score, 4), **(r.fields or {})}
+                for r in result.rows()]
         for h in hits:  # track usage for aging (§9.6)
             self.coll.mutate_in(h["id"], (SD.counter("access_count", 1),
                                           SD.upsert("last_accessed", now_iso())))
