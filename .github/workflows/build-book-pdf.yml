@@ -1,0 +1,37 @@
+name: Build book PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "images/book_logo.png"
+      - "scripts/build_pdf.sh"
+      - ".github/workflows/build-book-pdf.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pandoc + LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-latex-recommended
+
+      - name: Build PDF
+        run: ./scripts/build_pdf.sh
+
+      - name: Publish as release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: book-pdf-latest
+          name: "AI Engineering on Couchbase (PDF, latest)"
+          body: "Auto-generated from docs/ on every push to main. Always reflects the current state of the book."
+          prerelease: true
+          files: AI-Engineering-on-Couchbase.pdf
