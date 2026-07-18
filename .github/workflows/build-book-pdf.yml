@@ -1,0 +1,79 @@
+name: Build book PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "images/book_logo.png"
+      - "scripts/build_pdf.sh"
+      - ".github/workflows/build-book-pdf.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pandoc + LaTeX + Arial
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-latex-recommended fonts-liberation
+          # ttf-mscorefonts-installer (Arial, Times New Roman, etc.) requires accepting
+          # Microsoft's EULA — accept it non-interactively via debconf so the install
+          # doesn't hang waiting on a prompt that can't appear in CI.
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
+          sudo apt-get install -y ttf-mscorefonts-installer
+          fc-cache -f
+
+      - name: Build PDF
+        run: ./scripts/build_pdf.sh
+
+      - name: Publish as release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: book-pdf-latest
+          name: "AI Engineering on Couchbase (PDF, latest)"
+          body: "Auto-generated from docs/ on every push to main. Always reflects the current state of the book."
+          prerelease: true
+          files: AI-Engineering-on-Couchbase.pdf
+
+      # Release assets on a private repo require an authenticated GitHub
+      # session to download — desktop browsers have that cookie already, but
+      # mobile browsers/downloaders frequently don't carry it through the
+      # redirect and silently save GitHub's login-wall response (a few bytes)
+      # in place of the PDF. GitHub Pages content is served from a separate
+      # public origin regardless of the source repo's visibility, so publish
+      # the same PDF there as a no-auth-required mirror for mobile downloads.
+      - name: Prepare Pages site
+        run: |
+          mkdir -p _site
+          cp AI-Engineering-on-Couchbase.pdf _site/
+          # GitHub Pages serves whatever's at the root path; without an index.html the
+          # bare Pages URL 404s even though the PDF itself is reachable by exact filename.
+          # Redirect root -> the PDF so the plain Pages URL works as a download link.
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>AI Engineering on Couchbase</title>
+          <meta http-equiv="refresh" content="0; url=AI-Engineering-on-Couchbase.pdf">
+          <p>Redirecting to <a href="AI-Engineering-on-Couchbase.pdf">AI-Engineering-on-Couchbase.pdf</a>…</p>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

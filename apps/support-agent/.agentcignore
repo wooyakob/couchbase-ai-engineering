@@ -1,0 +1,4 @@
+# Runtime/eval code must stay out of `agentc index` (it imports python files it scans)
+main.py
+agent/*
+evals/*

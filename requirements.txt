@@ -1,0 +1,48 @@
+# Core (notebooks 01-06, 08, 10)
+couchbase>=4.3
+python-dotenv>=1.0
+openai>=1.30
+pydantic>=2
+langchain-core>=0.3
+langchain-openai>=0.3
+langchain-couchbase>=0.3.0
+
+# Managed Agent Memory (notebook 09, apps/support-agent) — the couchbase-agent-memory
+# SDK talks to an Agent Memory server (a Docker container) that persists into
+# Couchbase/Capella. Requires Python 3.12+.
+couchbase-agent-memory
+
+# Orchestration (notebook 07, apps/support-agent) — Couchbase has no orchestration
+# framework; we use LangGraph (agentc requires Python 3.11+; overall floor is 3.12+,
+# set by couchbase-agent-memory above)
+# Other supported Agent Orchestration frameworks include: LlamaIndex, CrewAI and Strands
+langgraph>=0.5
+langgraph-checkpointer-couchbase
+agentc
+agentc-langgraph
+agentc-langchain   # agentc_langgraph.agent imports this at load time but doesn't
+                   # declare it as a dependency — install explicitly or ReActAgent
+                   # fails with ModuleNotFoundError on import
+
+# Couchbase MCP server (Chapter 12, notebook 12) — exposes cluster access to
+# MCP-compatible AI tools. couchbase-mcp-server itself is NOT pip-installed — notebook 12
+# runs it on demand via `uvx` (needs `uv`: https://docs.astral.sh/uv/); listed here as
+# documentation of what gets fetched, and so `pip install -r requirements.txt` pulls in
+# langchain-mcp-adapters, which notebook 12 does need directly.
+couchbase-mcp-server
+langchain-mcp-adapters>=0.1
+
+# Evaluation (notebook 08) — Couchbase has no built-in evals; we use Ragas
+# langchain-community pinned below 0.4.2: that release dropped chat_models.vertexai,
+# which ragas 0.4.x still imports unconditionally at module load.
+ragas>=0.2
+langchain-community<0.4.2
+tqdm>=4.66
+
+# Notebooks
+jupyter
+pandas
+
+# Testing (tests/test_notebooks.py) — executes each notebook end-to-end via nbclient;
+# ipykernel/nbformat/nbclient already come transitively via jupyter above
+pytest>=8.0
