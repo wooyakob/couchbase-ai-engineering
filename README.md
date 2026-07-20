@@ -94,7 +94,7 @@ Notebooks are generated from `notebooks/src/*.py` (jupytext percent format) via 
 ### Setup
 All functionality can be run using a paid Capella cluster that meets the prerequisites for AI capabilities such as AI Functions and Agent Catalog. See [AI Functions Prerequisites](https://docs.couchbase.com/ai/build/ai-functions.html#prerequisites) and [Agent Catalog Prerequisites](https://docs.couchbase.com/ai/build/integrate-agent-with-catalog.html#prerequisites).
 
-You can create a free Capella cluster with Data, Index, Query and Search enabled. AI Functions can't be tested but the remaining functionality should work as expected based on the prerequisites.
+You can create a free Capella cluster with Data, Index, Query and Search enabled. AI Functions can't be tested but the remaining functionality should work as expected based on the prerequisites. Note that notebooks 13 and 14 additionally require the **Eventing** and **Analytics** services, which are not available on the free tier.
 
 ### Testing
 Every notebook is covered by an automated end-to-end suite (`pytest tests/test_notebooks.py`, executing each notebook for real, cell by cell, against a live cluster and model API) and has also been run through manually.
@@ -142,7 +142,7 @@ Each notebook's kernel inherits whichever `ENV_FILE` its Jupyter process was sta
 
 Everything else (notebooks 01, 02, 03, 06, 08, 09, and both apps/) runs the same against a local Couchbase Server or Capella; just point `.env` at whichever.
 
-You need a Couchbase cluster with Data + Query + Index + Search services and a bucket named `ai`: [Capella](https://cloud.couchbase.com/), or locally.
+You need a Couchbase cluster with Data + Query + Index + Search services and a bucket named `ai`: [Capella](https://cloud.couchbase.com/), or locally. Notebooks 13 (`13_eventing`) and 14 (`14_analytics_agent_tool`) additionally require the **Eventing** and **Analytics** services to be enabled.
 
 ```bash
 docker run -d --name cb -p 8091-8097:8091-8097 -p 11210:11210 couchbase:enterprise
